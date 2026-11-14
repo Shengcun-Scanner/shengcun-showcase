@@ -6,8 +6,16 @@ Shengcun is a single Python command that reads a repository, a directory, a cont
 Kubernetes bundle, an IaC tree or a model file, and writes findings as SARIF 2.1.0 or a CycloneDX
 SBOM. It runs with no network by default: the static scanners only ever read bytes on disk.
 
-This repository is the public showcase. The scanner itself is a private product; the source is not
-published here. If you want to see it run against your codebase, [request a demo](#request-a-demo).
+Shengcun is **in development, and this repository is its public showcase**. Two editions are coming:
+
+- **Shengcun Lite** — an open-source edition, released under AGPL-3.0, out shortly. Stable core scanners,
+  the same SARIF and CycloneDX output, run it anywhere.
+- **Shengcun** — the full edition, launched as a proprietary SaaS: live credential verification, the
+  socket-opening dynamic scanners, managed baselines and scheduled scans across an organisation.
+
+The source is not published here yet. Until the lite edition ships, this page carries the architecture,
+the measured numbers and the coverage; if you want to see it run against your codebase,
+[request a demo](#request-a-demo).
 
 ---
 
@@ -134,7 +142,8 @@ repository, or the SARIF output wired into your pipeline:
 ## Licence
 
 This showcase repository — its text, diagrams and tables — is licensed under the GNU Affero General
-Public License v3.0. See [LICENSE](LICENSE). The Shengcun scanner itself is proprietary and is not
-distributed here; the AGPL above covers this repository's contents only.
+Public License v3.0. See [LICENSE](LICENSE). Shengcun Lite will be released under the same licence.
+The full Shengcun edition is proprietary SaaS and is not distributed here; the AGPL above covers this
+repository's contents only.
 
 Copyright (c) RS Systems.
