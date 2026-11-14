@@ -93,6 +93,34 @@ reported once whether it is reached by the AST pass, the taint pass or a languag
 
 ---
 
+## Penetration testing, both directions
+
+**Static, inside the code.** The scanner reads a repository the way a reviewer would: AST and
+interprocedural taint tracing from source to sink, dangerous-call and deserialization rules, entropy
+and signature secrets, IaC and CI misconfiguration. That is code-level pen testing with nothing
+executed — it finds the path an attacker would take before anything runs.
+
+**Black-box, against a URL you are authorised to test.** The dynamic half is in the engine, not on a
+roadmap:
+
+- `shengcun easm <url>` — external attack surface: DNS, TLS, headers, exposed endpoints, and whether
+  the host resolves to a known C2 seed (`EASM-C2-BEACON`).
+- `shengcun url-audit <url>` — enumerates every form a live page publishes (action, method, fields)
+  and audits the client-side posture.
+- `shengcun url-pentest` (`shengcun/scanners/url_pentest.py`) — replays those forms with unique marker
+  payloads and judges what comes back: reflected XSS, encoded reflection, error-signature leakage and
+  potential blind SQL injection.
+- `shengcun active-port <host>` — authorised high-value port scan with banner grabbing.
+
+The constraints are deliberate: every outbound request is checked against the scope you declared,
+rate-limited, one request per call, never brute-forced, and non-destructive by construction — it
+moves bytes and reports reflections, it does not write payloads into a target. Probing a host you do
+not own or have written permission to test is a criminal act in most jurisdictions; the scope parser
+exists to enforce the boundary you set.
+
+The lite edition ships the static half in full. The black-box probes, live credential verification
+and scheduled scans belong to the full edition.
+
 ## Measured runtimes
 
 The same 100 Python files, one process, on an 8-core laptop, wall clock:
