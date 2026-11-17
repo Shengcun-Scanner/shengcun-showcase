@@ -153,7 +153,7 @@ run on every commit without becoming background noise.
 Shengcun is available for evaluation and licensing. If you want a walkthrough, a scan of your own
 repository, or the SARIF output wired into your pipeline:
 
-- **Request a demo:** email [buisness@rs-systems-web.com](mailto:buisness@rs-systems-web.com?subject=Shengcun%20demo%20request) with the repository you would like scanned and its language mix, and you will get a time back by reply.
+- **Request a demo:** email [business@rs-systems-web.com](mailto:business@rs-systems-web.com?subject=Shengcun%20demo%20request) with the repository you would like scanned and its language mix, and you will get a time back by reply.
 - **Commercial licensing and questions:** RS Systems — [rs-systems-web.com](https://rs-systems-web.com)
 
 ---
