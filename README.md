@@ -8,9 +8,12 @@ An offline-first security scanner for code, containers, infrastructure and the s
 active development and working toward support for 45 languages.**
 
 It reads a repository, a container manifest, a Kubernetes bundle, an IaC tree or a model file and
-writes findings as SARIF 2.1.0 or a CycloneDX SBOM. It is standard-library Python: no dependencies to
-install, no package index, no network at scan time — it runs on an air-gapped box and in a pre-commit
-hook.
+writes findings as SARIF 2.1.0 or a CycloneDX SBOM.
+
+**Pure Python and pure Rust, nothing else.** The scanners are standard-library Python; the call-graph
+engine, the isolation jails and the binary parsers are `std`-only Rust that builds to single static
+files. No third-party packages, no crates, no package index, no network at scan time — it installs on
+an air-gapped box and runs from a pre-commit hook.
 
 **Shengcun is new.** It is still being built, it gets better every week, and eight fixes merged
 upstream in its first week of hunting is the floor, not the ceiling.
@@ -47,6 +50,10 @@ to fix, and every accepted fix becomes a regression test in this engine.
 around that finding only, suggests a patch and applies it — then re-scans the file and its neighbours.
 If the finding survives, or a new one appears at the same severity or higher, or the file stops parsing,
 the patch is reverted automatically. Bring your own model provider and key; the fixer never commits.
+
+**It ships as two languages and no dependencies.** Python for the rules and the report, Rust for the
+parts that must not be slow or must not be escapable — the graph, the sandbox, the binary parsers.
+One `scp` to an air-gapped host and it works.
 
 **It knows whether a dependency finding can actually be reached.** Advisories and exploit-likelihood
 scores are joined against a real call graph, so "critical CVE in a library you import but never call"
@@ -113,6 +120,18 @@ The same tree, same machine:
 Bandit is a good single-domain tool and beats one Shengcun worker by roughly 20% on that one job. The
 difference is that Shengcun covers every domain on this page in a single pass, with nothing to install
 and nothing that phones home.
+
+## Runtime
+
+| Piece | Language | Dependencies |
+|---|---|---|
+| Scanner, rules, SARIF, report | Python 3.10+, standard library only | none |
+| Call-graph engine | Rust, `std` only | no crates, and no C toolchain for the shipped binaries |
+| Kernel jail and KVM tier | Rust, `std` only | no crates |
+| Binary and PE parsers | Rust, `std` only | no crates |
+
+Linux, macOS and Windows. The static half needs no network and no package index; the Rust components
+ship as single static files, so a target machine never needs a Rust toolchain.
 
 ## Outputs
 
