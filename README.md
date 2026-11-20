@@ -9,6 +9,30 @@ reads bytes on disk and nothing else.
 This repository is the public showcase. The source is private; this page describes what the scanner
 covers and how fast it is, not how it works internally.
 
+[![Get emailed alerts](https://img.shields.io/badge/shengcun%20alerts-subscribe-0f766e?style=for-the-badge)](https://alerts.rs-systems-web.com/)
+
+**Want to know when it ships or when a finding type changes?** [Get emailed alerts](https://alerts.rs-systems-web.com/).
+
+---
+
+## Status and roadmap
+
+**Shengcun is in development.**
+
+While it is being built, we feed the work back upstream: **multiple pull requests a day** to the open-source
+projects whose parsers, scanners and specifications we depend on — fixes, reproductions and documentation
+that land in the projects you already use. It is also how the engine is trained and hardened: every merged
+upstream fix becomes a regression case here.
+
+When it is done:
+
+- **Shengcun Lite** ships **free and open source under AGPL-3.0**.
+- **The full edition** ships as a **proprietary SaaS**, with the isolation tiers, the review and
+  remediation surfaces, compliance mapping and support.
+
+[Get emailed alerts](https://alerts.rs-systems-web.com/) for the release and for changes to what the
+scanner detects.
+
 ---
 
 ## Coverage
