@@ -2,55 +2,87 @@
 
 **An offline-first security scanner for code, containers, infrastructure and the supply chain.**
 
-Shengcun reads a repository, container manifest, Kubernetes bundle, IaC tree or model file, and writes
-findings as SARIF 2.1.0 or a CycloneDX SBOM. Static scanning performs no network I/O: it reads bytes on
-disk and nothing else.
+Shengcun reads a repository, a container manifest, a Kubernetes bundle, an IaC tree or a model file,
+and writes findings as SARIF 2.1.0 or a CycloneDX SBOM. Static scanning performs no network I/O: it
+reads bytes on disk and nothing else.
 
-This repository is the public showcase. The source is private; the numbers and coverage below are what
-it does, not how it does it. [Request a demo](#request-a-demo) to see it run against your codebase.
+This repository is the public showcase. The source is private; this page describes what the scanner
+covers and how fast it is, not how it works internally.
 
 ---
 
-## What it covers
+## Coverage
 
-- **Application code** — vulnerability patterns, dangerous sinks and cross-file data flow, read from a
-  parsed AST plus a per-repository call graph rather than from regular expressions.
-- **Secrets** — signature families for cloud keys, tokens, private keys and connection strings, plus
-  entropy analysis, with optional read-only verification that proves a credential is live without
-  changing anything.
-- **Infrastructure as code** — Dockerfile, Compose, Kubernetes, Terraform, GitHub Actions and RBAC YAML.
-- **Supply chain** — dependency advisories by resolved version, exploit-likelihood scoring, and a
-  CycloneDX SBOM using the same coordinates the findings cite.
-- **Containers** — image and manifest posture, base-image drift.
-- **CI/CD** — workflow permissions, unpinned actions, script injection.
-- **Model and agent surfaces** — model-weight deserialization risks, MCP and agent configuration,
-  prompt-injection surfaces.
-- **Live targets, only with authorization** — external attack-surface discovery, port probing and form
-  auditing behind an explicit authorization flag and a scope check that fails closed.
+**Application code**
+- Vulnerability patterns across Python, JavaScript/TypeScript, Go, Rust, Ruby, PHP, Java, Kotlin, C#,
+  Swift, Scala and C/C++, read from a parsed syntax tree rather than from regular expressions.
+- Cross-file data flow: a source in one file reaching a sink in another is a finding, not a miss.
+- An unresolved call is reported as unresolved rather than silently dropped.
 
-## What it produces
+**Secrets**
+- Signature families for cloud keys, platform tokens, private keys and connection strings, plus
+  entropy analysis over high-entropy strings.
+- Optional, read-only verification that a credential is live.
+- Git history scanning for credentials already committed.
 
-- SARIF 2.1.0, ingestible by GitHub code scanning, Azure DevOps or any SIEM that speaks it.
+**Infrastructure as code**
+- Dockerfile, Compose, Kubernetes, Terraform, CloudFormation-style templates, GitHub Actions and RBAC
+  YAML, each with its own rule domain and line-anchored findings.
+
+**Supply chain**
+- Dependency advisories resolved against the versions you actually pin.
+- Exploit-likelihood scoring, so a high-CVSS issue nobody exploits does not outrank a live one.
+- CycloneDX 1.5 SBOM using the same coordinates the findings cite.
+
+**Containers**
+- Image and manifest posture, base-image drift, exposed runtime settings.
+
+**CI/CD**
+- Workflow permissions, unpinned third-party actions, script injection through expression contexts.
+
+**Models and agents**
+- Model-weight deserialization risks and unsafe loaders.
+- Agent and MCP configuration: over-broad tool grants, shell escapes, prompt-injection surfaces.
+
+**Compliance mapping**
+- Findings carry their control mappings for SOC 2, PCI DSS, HIPAA and the CIS benchmarks.
+
+**External surface, authorization required**
+- Attack-surface discovery, port probing and form auditing behind an explicit authorization flag and a
+  scope check that fails closed. Nothing runs against a host you have not declared in scope.
+
+## Review and remediation
+
+- **Change-scoped scanning** — scan only what a branch touches, plus its call-graph neighbourhood, and
+  flag code that becomes newly reachable.
+- **Pull-request review** — one review comment per PR with a computed verdict, not a wall of findings.
+- **Remediation suggestions** — a suggested fix attached to the finding, and an optional assisted fix
+  that can be run against a single finding with your own model provider and key.
+- **Pre-push gate** — block the push that introduces a finding, without blocking legacy debt.
+- **Signed findings** — findings and reports can be signed so a client can prove when something was
+  first seen and that a report has not been edited.
+- **Impact tracing** — follow a leaked credential to where it actually goes and how to revoke it.
+- **Prioritisation** — dependency findings are ranked by whether the vulnerable code is reachable and
+  how likely the exploit is in the wild.
+- **History and metrics** — findings are tracked over time with mean-time-to-remediation by severity,
+  rule and directory.
+- **Policy as code** — per-client rules over findings, in a small declarative file.
+- **Expiring suppressions** — every exception carries a reason and an expiry, and CI fails the day one
+  lapses.
+- **Baselines** — acknowledge what exists so the next run reports only what changed.
+
+## Outputs
+
+- SARIF 2.1.0 for GitHub code scanning, Azure DevOps or any SIEM that speaks it.
 - CycloneDX 1.5 SBOM.
-- JSON and a self-contained HTML report, optionally white-labelled per client.
-- Exit codes that separate "clean", "findings at or above the threshold", "usage error",
-  "could not evaluate the target" and "isolation unavailable" — so a pipeline never confuses a broken
-  scan with a clean one.
+- JSON, a console report, and a self-contained HTML report that can be white-labelled per client.
+- Exit codes that distinguish clean, findings at or above threshold, usage error, target that could not
+  be evaluated, and isolation unavailable — a broken scan never looks like a clean one.
 
-## Why teams use it
+## Benchmarks
 
-- **It runs where the others can't.** Standard-library Python, zero third-party dependencies, no
-  package index needed. It installs on an air-gapped host and keeps working.
-- **One run, one report.** Code, secrets, IaC, dependencies, containers and CI in a single pass instead
-  of six tools with six config files and six formats.
-- **A baseline that means something.** The second run shows what changed, not everything again.
-- **Isolation tiers.** Static scans are local. Untrusted samples and dynamic analysis run inside a
-  confinement tier, and if the tier cannot start the scan refuses rather than running unbounded.
-
-## Speed
-
-Measured on an 8-core laptop, Django 5.1.4 source tree (2,788 files, 71 MB), warm cache, median of two
-runs:
+Measured on an 8-core laptop against the Django 5.1.4 source tree (2,788 files, 71 MB), warm cache,
+median of two runs:
 
 | Run | Time |
 |---|---|
@@ -58,6 +90,17 @@ runs:
 | Full rule set, four processes | 13.0 s |
 | Full rule set, seven processes | 8.6 s |
 | A 67-file service tree | 1.4 s |
+
+For reference on the same tree, a Python-only AST linter takes about 17 s and a multi-language
+pattern-matching engine about 115 s doing narrower work.
+
+## Deployment
+
+- **CLI** — one command, one exit code, usable in a pre-commit hook or a build step.
+- **Air-gapped** — standard-library Python, no third-party dependencies, no package index required.
+- **Isolation tiers** — untrusted samples and dynamic analysis run confined; if confinement cannot
+  start, the scan refuses instead of running unbounded.
+- **Batch mode** — scan many client directories in one run, each with its own report and identity.
 
 ## Output example
 
@@ -79,30 +122,12 @@ $ shengcun scan .
 Scan Summary: 3 CRITICAL | 0 HIGH | 0 MEDIUM | 0 LOW
 ```
 
-## Interfaces
+## Access
 
-- **CLI** — one command, one exit code, works in a pre-commit hook or a build step.
-- **CI** — SARIF upload for native code-scanning views, plus workflow annotations.
-- **Review and remediation** — change-scoped scanning, a PR review verdict, and remediation
-  suggestions, each optional.
-- **Operations** — history database, dashboards, per-client batch scanning, baselines and policy rules.
-
-## Editions
-
-A lite edition is being cut for release under AGPL-3.0. The full edition is available as a commercial
-licence, with the isolation tiers, the review and remediation surfaces, compliance mapping and support.
-
-## Request a demo
-
-Open an issue on this repository or use the contact address in the repository profile. Demo requests
-are answered with a run against a codebase of your choosing.
+Shengcun is available under a commercial licence. Open an issue on this repository to request a demo
+against a codebase of your choosing.
 
 ## Security
 
 Please do not open public issues for vulnerabilities. Use the private reporting channel in the
 repository security policy.
-
-## License
-
-This showcase repository is documentation only. The product is licensed separately; see the edition
-notes above.
