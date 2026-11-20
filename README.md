@@ -2,167 +2,107 @@
 
 **An offline-first security scanner for code, containers, infrastructure and the supply chain.**
 
-Shengcun is a single Python command that reads a repository, a directory, a container manifest, a
-Kubernetes bundle, an IaC tree or a model file, and writes findings as SARIF 2.1.0 or a CycloneDX
-SBOM. It runs with no network by default: the static scanners only ever read bytes on disk.
+Shengcun reads a repository, container manifest, Kubernetes bundle, IaC tree or model file, and writes
+findings as SARIF 2.1.0 or a CycloneDX SBOM. Static scanning performs no network I/O: it reads bytes on
+disk and nothing else.
 
-Shengcun is **in development, and this repository is its public showcase**. A lite edition is being cut
-for release under AGPL-3.0 and ships shortly; the full edition launches as a proprietary SaaS.
-
-The source is not published here yet. This page carries the architecture, the measured numbers and the
-coverage; if you want to see it run against your codebase, [request a demo](#request-a-demo).
-
----
-
-## Why it exists
-
-A normal repository review needs six or seven tools: a SAST engine, a secrets scanner, an IaC linter,
-a container checker, a dependency audit, a workflow audit and something for the new class of agent
-and MCP findings. Most teams run two of them, because every extra tool is another install, another
-config file, another output format and another source of noise.
-
-Shengcun is one binary, one exit code, one report, with a baseline so the second run only shows what
-changed. Everything is standard library Python with zero third-party dependencies, so it installs in
-seconds and runs on an air-gapped host.
-
----
-
-## Architecture
-
-```mermaid
-flowchart TD
-    Target[Target Path or Repository] --> Core[Core Engine<br/>registry, baseline, exit policy]
-
-    subgraph Static["Static Scanners"]
-        Core --> AST[AST Taint Analysis]
-        Core --> SEC[Entropy and Signature Secrets]
-        Core --> IAC[Container, K8s, Terraform, RBAC]
-        Core --> MCP[MCP and Agent OpSec]
-        Core --> SUP[Supply Chain and CI/CD]
-        Core --> MDL[Model Weights]
-    end
-
-    subgraph Dynamic["Dynamic Scanners (scope-gated)"]
-        Core --> EASM[EASM]
-        Core --> PORT[Authorized Port Scan]
-        Core --> URL[URL Form Audit]
-    end
-
-    subgraph Verify["Opt-in Verification"]
-        Core --> VERIFY[Live Credential Check]
-        Core --> OSV[OSV Advisory Query]
-    end
-
-    AST & SEC & IAC & MCP & SUP & MDL --> Findings[Findings]
-    EASM & PORT & URL --> Findings
-    VERIFY & OSV --> Findings
-
-    Findings --> Baseline{Baseline Filter}
-    Baseline --> Active[Active Findings]
-    Active --> Out[SARIF 2.1.0 / CycloneDX SBOM / CLI]
-```
-
-An offline scan never leaves the machine. The three dynamic entry points, credential verification and
-the OSV query are the only code paths that open a socket, and each one is invoked by an explicit flag
-or command.
+This repository is the public showcase. The source is private; the numbers and coverage below are what
+it does, not how it does it. [Request a demo](#request-a-demo) to see it run against your codebase.
 
 ---
 
 ## What it covers
 
-35 scanner modules, each owning one domain:
+- **Application code** — vulnerability patterns, dangerous sinks and cross-file data flow, read from a
+  parsed AST plus a per-repository call graph rather than from regular expressions.
+- **Secrets** — signature families for cloud keys, tokens, private keys and connection strings, plus
+  entropy analysis, with optional read-only verification that proves a credential is live without
+  changing anything.
+- **Infrastructure as code** — Dockerfile, Compose, Kubernetes, Terraform, GitHub Actions and RBAC YAML.
+- **Supply chain** — dependency advisories by resolved version, exploit-likelihood scoring, and a
+  CycloneDX SBOM using the same coordinates the findings cite.
+- **Containers** — image and manifest posture, base-image drift.
+- **CI/CD** — workflow permissions, unpinned actions, script injection.
+- **Model and agent surfaces** — model-weight deserialization risks, MCP and agent configuration,
+  prompt-injection surfaces.
+- **Live targets, only with authorization** — external attack-surface discovery, port probing and form
+  auditing behind an explicit authorization flag and a scope check that fails closed.
 
-| Domain | Modules |
-| --- | --- |
-| Code and taint | `ast_visitor`, `taint`, `interprocedural`, `sast`, `lang_rules`, `graph_markers` |
-| Secrets | `secrets`, `secret_verify` |
-| Containers and infrastructure | `container_iac`, `k8s_manifest`, `iac`, `systrap`, `priv_esc` |
-| Supply chain | `supply_chain`, `osv`, `git_history`, `cicd_workflow` |
-| Agent and AI surfaces | `mcp_security`, `agent_opsec`, `prompt_surfaces`, `model_weights` |
-| Untrusted artifacts | `binary`, `pickle_inspector`, `malware_behaviour`, `legacy_source`, `repo_traps` |
-| Network and exposure (gated) | `easm`, `active_port`, `network_opsec`, `url_audit`, `url_pentest`, `web_auth`, `dynamic` |
-| Sandbox and enforcement | `hwjail` (hardware jail), licensing and exit policy in `core` |
+## What it produces
 
-Findings carry a severity, a file and line, a rule id and a remediation hint, and the same finding is
-reported once whether it is reached by the AST pass, the taint pass or a language rule.
+- SARIF 2.1.0, ingestible by GitHub code scanning, Azure DevOps or any SIEM that speaks it.
+- CycloneDX 1.5 SBOM.
+- JSON and a self-contained HTML report, optionally white-labelled per client.
+- Exit codes that separate "clean", "findings at or above the threshold", "usage error",
+  "could not evaluate the target" and "isolation unavailable" — so a pipeline never confuses a broken
+  scan with a clean one.
 
----
+## Why teams use it
 
-## Penetration testing, both directions
+- **It runs where the others can't.** Standard-library Python, zero third-party dependencies, no
+  package index needed. It installs on an air-gapped host and keeps working.
+- **One run, one report.** Code, secrets, IaC, dependencies, containers and CI in a single pass instead
+  of six tools with six config files and six formats.
+- **A baseline that means something.** The second run shows what changed, not everything again.
+- **Isolation tiers.** Static scans are local. Untrusted samples and dynamic analysis run inside a
+  confinement tier, and if the tier cannot start the scan refuses rather than running unbounded.
 
-**Static, inside the code.** The scanner reads a repository the way a reviewer would: AST and
-interprocedural taint tracing from source to sink, dangerous-call and deserialization rules, entropy
-and signature secrets, IaC and CI misconfiguration. That is code-level pen testing with nothing
-executed — it finds the path an attacker would take before anything runs.
+## Speed
 
-**Black-box, against a URL you are authorised to test.** The dynamic half is in the engine, not on a
-roadmap:
+Measured on an 8-core laptop, Django 5.1.4 source tree (2,788 files, 71 MB), warm cache, median of two
+runs:
 
-- `shengcun easm <url>` — external attack surface: DNS, TLS, headers, exposed endpoints, and whether
-  the host resolves to a known C2 seed (`EASM-C2-BEACON`).
-- `shengcun url-audit <url>` — enumerates every form a live page publishes (action, method, fields)
-  and audits the client-side posture.
-- `shengcun url-pentest` (`shengcun/scanners/url_pentest.py`) — replays those forms with unique marker
-  payloads and judges what comes back: reflected XSS, encoded reflection, error-signature leakage and
-  potential blind SQL injection.
-- `shengcun active-port <host>` — authorised high-value port scan with banner grabbing.
+| Run | Time |
+|---|---|
+| Full rule set, one process | 22.2 s |
+| Full rule set, four processes | 13.0 s |
+| Full rule set, seven processes | 8.6 s |
+| A 67-file service tree | 1.4 s |
 
-The constraints are deliberate: every outbound request is checked against the scope you declared,
-rate-limited, one request per call, never brute-forced, and non-destructive by construction — it
-moves bytes and reports reflections, it does not write payloads into a target. Probing a host you do
-not own or have written permission to test is a criminal act in most jurisdictions; the scope parser
-exists to enforce the boundary you set.
+## Output example
 
-## Measured runtimes
+```text
+$ shengcun scan .
 
-The same 100 Python files, one process, on an 8-core laptop, wall clock:
+[CRITICAL] SEC-001 [CWE-798]: AWS Access Key ID Detected
+  --> server/config.py:42:22
+  Fix:  Store AWS credentials in IAM roles or environment variables.
 
-| Tool | Time | Findings | Scope on that corpus |
-| --- | --- | --- | --- |
-| **Shengcun** | **8.3 s** | 62 | Python code plus secrets, dependencies, CI config and repo traps in one pass |
-| Bandit | 4.1 s | 145 | Python AST security rules only |
-| Semgrep (`p/default`) | 44.6 s | 24 | SAST rules only |
+[CRITICAL] AST-001 [CWE-78]: Command injection: subprocess with shell=True
+  --> pipeline/run.py:115:5
+  Fix:  Set shell=False and pass an argument list.
 
-Read that table for what it is: Bandit is faster because it does one thing over one language, and
-Semgrep is slower because it loads a large rule pack. The finding counts are not a quality ranking —
-they count different things, and a rule that fires on `subprocess` and a rule that fires on an
-unpinned container digest are not comparable. The point is that Shengcun's breadth costs seconds, not
-minutes, so it can sit in a pre-commit hook.
+[CRITICAL] IAC-TF-001 [CWE-284]: Security group ingress open to 0.0.0.0/0 on port 22
+  --> infra/main.tf:18:5
+  Fix:  Restrict cidr_blocks or move behind a bastion.
 
-Larger runs, measured on a 2,788-file repository: 22 s single process, 8.6 s across seven workers.
-
----
-
-## Output
-
-```bash
-shengcun scan . --sarif -o results.sarif     # SARIF 2.1.0, drops straight into GitHub code scanning
-shengcun scan . --json -o results.json       # machine-readable findings
-shengcun scan . --create-baseline base.json  # pin today's findings
-shengcun scan . --baseline base.json         # report only what is new since then
-shengcun scan . --fail-level HIGH            # exit non-zero on a high or critical finding
+Scan Summary: 3 CRITICAL | 0 HIGH | 0 MEDIUM | 0 LOW
 ```
 
-Deterministic ordering, stable rule ids and a baseline that survives refactors are the reason it can
-run on every commit without becoming background noise.
+## Interfaces
 
----
+- **CLI** — one command, one exit code, works in a pre-commit hook or a build step.
+- **CI** — SARIF upload for native code-scanning views, plus workflow annotations.
+- **Review and remediation** — change-scoped scanning, a PR review verdict, and remediation
+  suggestions, each optional.
+- **Operations** — history database, dashboards, per-client batch scanning, baselines and policy rules.
 
-## Request a Demo
+## Editions
 
-Shengcun is available for evaluation and licensing. If you want a walkthrough, a scan of your own
-repository, or the SARIF output wired into your pipeline:
+A lite edition is being cut for release under AGPL-3.0. The full edition is available as a commercial
+licence, with the isolation tiers, the review and remediation surfaces, compliance mapping and support.
 
-- **Request a demo:** email [business@rs-systems-web.com](mailto:business@rs-systems-web.com?subject=Shengcun%20demo%20request) with the repository you would like scanned and its language mix, and you will get a time back by reply.
-- **Commercial licensing and questions:** RS Systems — [rs-systems-web.com](https://rs-systems-web.com)
+## Request a demo
 
----
+Open an issue on this repository or use the contact address in the repository profile. Demo requests
+are answered with a run against a codebase of your choosing.
 
-## Licence
+## Security
 
-This showcase repository — its text, diagrams and tables — is licensed under the GNU Affero General
-Public License v3.0. See [LICENSE](LICENSE). Shengcun Lite will be released under the same licence.
-The full Shengcun edition is proprietary SaaS and is not distributed here; the AGPL above covers this
-repository's contents only.
+Please do not open public issues for vulnerabilities. Use the private reporting channel in the
+repository security policy.
 
-Copyright (c) RS Systems.
+## License
+
+This showcase repository is documentation only. The product is licensed separately; see the edition
+notes above.
