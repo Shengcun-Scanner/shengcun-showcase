@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <!-- Outer Circular Badge -->
+  <circle cx="256" cy="256" r="240" fill="#0c0d11" stroke="#20242d" stroke-width="8"/>
+
+  <!-- Subtle Teal Glow Behind Shoulders -->
+  <ellipse cx="256" cy="285" rx="148" ry="72" fill="#0a1f24"/>
+
+  <!-- Katana / Sword (behind shoulders & head, angled from bottom-left to top-right) -->
+  <g id="sword">
+    <!-- Main sword shaft -->
+    <line x1="108" y1="383" x2="395" y2="128" stroke="#e1e8f0" stroke-width="11" stroke-linecap="round"/>
+    <!-- Bottom-left cyan tip -->
+    <line x1="108" y1="383" x2="124" y2="369" stroke="#00f0ff" stroke-width="11" stroke-linecap="round"/>
+    <!-- Top-right cyan wrapped handle segments -->
+    <line x1="395" y1="128" x2="387" y2="135" stroke="#00f0ff" stroke-width="11" stroke-linecap="round"/>
+    <line x1="372" y1="149" x2="362" y2="158" stroke="#00f0ff" stroke-width="11" stroke-linecap="round"/>
+    <line x1="348" y1="170" x2="338" y2="179" stroke="#00f0ff" stroke-width="11" stroke-linecap="round"/>
+    <line x1="324" y1="191" x2="314" y2="200" stroke="#00f0ff" stroke-width="11" stroke-linecap="round"/>
+    <!-- Tsuba (hand guard) -->
+    <line x1="296" y1="201" x2="313" y2="220" stroke="#00f0ff" stroke-width="7" stroke-linecap="round"/>
+  </g>
+
+  <!-- Ninja Shoulders / Torso (single solid shape occluding sword behind it) -->
+  <path d="M 136 368 C 142 282 182 241 256 241 C 330 241 370 282 376 368 Z" fill="#161b21" stroke="#e1e8f0" stroke-width="7" stroke-linejoin="round"/>
+
+  <!-- Ninja Head & Hood -->
+  <path d="M 205 182 L 205 148 C 205 128 224 123 256 123 C 288 123 307 128 307 148 L 307 182 C 307 224 286 258 256 266 C 226 258 205 224 205 182 Z" fill="#0c0d11" stroke="#e1e8f0" stroke-width="7" stroke-linejoin="round"/>
+
+  <!-- Top Hair Bun & Cyan Tie -->
+  <path d="M 228 96 C 228 80 238 74 256 74 C 274 74 284 80 284 96 C 284 103 279 107 274 108 L 238 108 C 233 107 228 103 228 96 Z" fill="#e1e8f0"/>
+  <rect x="231" y="107" width="50" height="10" rx="5" fill="#00f0ff"/>
+
+  <!-- Glowing Cyan Eyes -->
+  <line x1="223" y1="165" x2="244" y2="169" stroke="#00f0ff" stroke-width="7" stroke-linecap="round"/>
+  <line x1="289" y1="165" x2="268" y2="169" stroke="#00f0ff" stroke-width="7" stroke-linecap="round"/>
+
+  <!-- Face Mask -->
+  <path d="M 205 182 C 218 190 236 193 256 193 C 276 193 294 190 307 182 C 307 226 286 260 256 269 C 226 260 205 226 205 182 Z" fill="#e1e8f0"/>
+  <!-- Mask Vent Slits -->
+  <line x1="244" y1="216" x2="247" y2="253" stroke="#0c0d11" stroke-width="5.5" stroke-linecap="round"/>
+  <line x1="268" y1="216" x2="265" y2="253" stroke="#0c0d11" stroke-width="5.5" stroke-linecap="round"/>
+
+  <!-- Laptop -->
+  <rect x="164" y="276" width="184" height="106" rx="12" fill="#0c0d11" stroke="#00f0ff" stroke-width="8"/>
+  <!-- Laptop Base Line -->
+  <line x1="128" y1="392" x2="384" y2="392" stroke="#e1e8f0" stroke-width="8" stroke-linecap="round"/>
+
+  <!-- Laptop Center Target Emblem -->
+  <g id="laptop-emblem">
+    <line x1="223" y1="333.5" x2="235" y2="333.5" stroke="#00f0ff" stroke-width="5" stroke-linecap="round"/>
+    <line x1="277" y1="333.5" x2="289" y2="333.5" stroke="#00f0ff" stroke-width="5" stroke-linecap="round"/>
+    <circle cx="256" cy="333.5" r="20.5" fill="none" stroke="#00f0ff" stroke-width="5"/>
+    <circle cx="256" cy="333.5" r="5" fill="#e1e8f0"/>
+  </g>
+</svg>
