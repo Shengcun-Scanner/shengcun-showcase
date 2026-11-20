@@ -124,10 +124,9 @@ Scan Summary: 3 CRITICAL | 0 HIGH | 0 MEDIUM | 0 LOW
 
 ## Access
 
-Shengcun is available under a commercial licence. Open an issue on this repository to request a demo
-against a codebase of your choosing.
+Shengcun is available under a commercial licence. Get in touch and you will get a demo against a
+codebase of your choosing:
 
-## Security
-
-Please do not open public issues for vulnerabilities. Use the private reporting channel in the
-repository security policy.
+- **Email** — [business@rs-systems-web.com](mailto:business@rs-systems-web.com?subject=Shengcun%20demo%20request)
+- **Telegram** — [@RS_SYSTEMS](https://t.me/RS_SYSTEMS)
+- **Discord** — `happypower1k`
