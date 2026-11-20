@@ -148,8 +148,12 @@ Scan Summary: 3 CRITICAL | 0 HIGH | 0 MEDIUM | 0 LOW
 
 ## Access
 
-Shengcun is available under a commercial licence. Get in touch and you will get a demo against a
-codebase of your choosing:
+**Shengcun is not publicly available.** It is under development and access is limited to **selected
+demos** for teams we are working with, until Shengcun Lite (AGPL-3.0) and the full commercial edition
+are released.
+
+If you want to be one of those demos, get in touch and you will get a run against a codebase of your
+choosing:
 
 - **Email** — [business@rs-systems-web.com](mailto:business@rs-systems-web.com?subject=Shengcun%20demo%20request)
 - **Telegram** — [@RS_SYSTEMS](https://t.me/RS_SYSTEMS)
